@@ -1,0 +1,887 @@
+openapi: 3.0.0
+info:
+  title: Car Insurance API
+  description: |
+    Complete API documentation for Car Insurance Management System.
+    
+    This API provides endpoints for:
+    - User authentication with OTP verification
+    - Insurance policy management
+    - Payment processing with Stripe
+    - Notification management
+    
+    ## Authentication
+    
+    The API uses JWT (JSON Web Tokens) for authentication. After successful OTP verification,
+    clients receive a JWT token that must be included in the Authorization header for protected endpoints.
+    
+    Format: `Authorization: Bearer <jwt_token>`
+    
+    ## Error Handling
+    
+    All error responses follow a consistent format:
+    ```json
+    {
+      "message": "Error description",
+      "code": "ERROR_CODE",
+      "timestamp": "2026-02-17T10:30:00Z"
+    }
+    ```
+    
+  version: 1.0.0
+  contact:
+    name: Car Insurance Team
+    email: team@carinsurance.com
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:5000
+    description: Development server
+  - url: https://api.yourdomain.com
+    description: Production server
+
+tags:
+  - name: Authentication
+    description: User authentication and OTP management
+  - name: Notifications
+    description: User notification management
+  - name: Payments
+    description: Payment processing and Stripe integration
+  - name: Policies
+    description: Insurance policy management
+  - name: Health
+    description: Service health check
+
+paths:
+  /api/health:
+    get:
+      tags:
+        - Health
+      summary: Health check endpoint
+      description: Check if the API server is running and healthy
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Server is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  timestamp:
+                    type: string
+                    format: date-time
+                  uptime:
+                    type: number
+                    description: Server uptime in seconds
+                    example: 3600
+
+  /api/auth/send-otp:
+    post:
+      tags:
+        - Authentication
+      summary: Send OTP to email
+      description: |
+        Send a One-Time Password (OTP) to the user's email address.
+        The OTP is valid for 5 minutes by default.
+        
+        **Rate Limiting**: Max 3 requests per 15 minutes per email
+      operationId: sendOtp
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: User email address
+                  example: user@example.com
+            examples:
+              success:
+                summary: Valid email
+                value:
+                  email: john.doe@gmail.com
+      responses:
+        '200':
+          description: OTP sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: OTP sent successfully
+                  email:
+                    type: string
+                    example: user@example.com
+                  expiresIn:
+                    type: number
+                    description: OTP expiration time in seconds
+                    example: 300
+        '400':
+          description: Invalid email format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidEmail:
+                  value:
+                    message: Invalid email format
+                    code: INVALID_EMAIL
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                rateLimited:
+                  value:
+                    message: Too many OTP requests. Please try again later.
+                    code: RATE_LIMIT_EXCEEDED
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/auth/verify-otp:
+    post:
+      tags:
+        - Authentication
+      summary: Verify OTP and login
+      description: |
+        Verify the OTP sent to user's email and return JWT authentication token.
+        
+        **Success**: Returns JWT token valid for 7 days
+        **Failure**: Returns error after 3 failed attempts (account locked for 15 minutes)
+      operationId: verifyOtp
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - otp
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: User email address
+                  example: user@example.com
+                otp:
+                  type: string
+                  description: 6-digit OTP
+                  pattern: '^\d{6}$'
+                  example: '123456'
+            examples:
+              success:
+                summary: Valid OTP
+                value:
+                  email: john.doe@gmail.com
+                  otp: '123456'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Login successful
+                  token:
+                    type: string
+                    description: JWT authentication token
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                  user:
+                    $ref: '#/components/schemas/User'
+                  expiresIn:
+                    type: number
+                    description: Token expiration time in seconds
+                    example: 604800
+        '400':
+          description: Invalid OTP or email format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidOtp:
+                  value:
+                    message: Invalid OTP
+                    code: INVALID_OTP
+                expiredOtp:
+                  value:
+                    message: OTP has expired
+                    code: OTP_EXPIRED
+        '429':
+          description: Too many failed attempts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                locked:
+                  value:
+                    message: Account locked due to failed attempts
+                    code: ACCOUNT_LOCKED
+        '404':
+          description: No OTP request found for this email
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/notifications:
+    get:
+      tags:
+        - Notifications
+      summary: Get user notifications
+      description: Retrieve all notifications for the authenticated user
+      operationId: getNotifications
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of notifications to return
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+          example: 10
+        - name: skip
+          in: query
+          description: Number of notifications to skip (for pagination)
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+          example: 0
+        - name: read
+          in: query
+          description: Filter by read status
+          schema:
+            type: boolean
+          example: false
+      responses:
+        '200':
+          description: List of notifications
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Notification'
+                  total:
+                    type: integer
+                    example: 5
+                  limit:
+                    type: integer
+                    example: 20
+                  skip:
+                    type: integer
+                    example: 0
+        '401':
+          description: Unauthorized - Invalid or missing token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                noToken:
+                  value:
+                    message: Authorization token is missing
+                    code: MISSING_TOKEN
+                invalidToken:
+                  value:
+                    message: Invalid or expired token
+                    code: INVALID_TOKEN
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/notifications/{id}:
+    put:
+      tags:
+        - Notifications
+      summary: Mark notification as read
+      description: Update notification status to mark it as read
+      operationId: updateNotification
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Notification ID
+          schema:
+            type: string
+            format: uuid
+          example: 507f1f77bcf86cd799439011
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                read:
+                  type: boolean
+                  description: Mark notification as read/unread
+                  example: true
+      responses:
+        '200':
+          description: Notification updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Notification marked as read
+                  data:
+                    $ref: '#/components/schemas/Notification'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Notification not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      tags:
+        - Notifications
+      summary: Delete notification
+      description: Delete a specific notification by ID
+      operationId: deleteNotification
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Notification ID
+          schema:
+            type: string
+            format: uuid
+          example: 507f1f77bcf86cd799439011
+      responses:
+        '200':
+          description: Notification deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Notification deleted successfully
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Notification not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/payments/create-intent:
+    post:
+      tags:
+        - Payments
+      summary: Create Stripe payment intent
+      description: |
+        Create a Stripe PaymentIntent for processing payments.
+        Returns the client secret and public key needed for Stripe.js integration.
+      operationId: createPaymentIntent
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - amount
+                - currency
+                - policyId
+              properties:
+                amount:
+                  type: integer
+                  description: Amount in cents (e.g., 1000 = $10.00)
+                  minimum: 50
+                  example: 1000
+                currency:
+                  type: string
+                  description: ISO 4217 currency code
+                  enum: [usd, eur, gbp, cad, aud]
+                  example: usd
+                policyId:
+                  type: string
+                  description: Insurance policy ID
+                  example: 507f1f77bcf86cd799439011
+                description:
+                  type: string
+                  description: Payment description
+                  example: Car Insurance Premium
+            examples:
+              standard:
+                summary: Standard car insurance payment
+                value:
+                  amount: 5000
+                  currency: usd
+                  policyId: 507f1f77bcf86cd799439011
+                  description: Monthly Car Insurance Premium
+      responses:
+        '201':
+          description: Payment intent created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      clientSecret:
+                        type: string
+                        description: Stripe client secret for payment processing
+                        example: pi_1234567890_secret_0987654321
+                      publicKey:
+                        type: string
+                        description: Stripe publishable key (can be used client-side)
+                        example: pk_test_1234567890
+                      paymentIntentId:
+                        type: string
+                        description: Stripe PaymentIntent ID
+                        example: pi_1234567890
+                      amount:
+                        type: integer
+                        example: 5000
+                      currency:
+                        type: string
+                        example: usd
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidAmount:
+                  value:
+                    message: Amount must be at least 50 cents
+                    code: INVALID_AMOUNT
+                invalidCurrency:
+                  value:
+                    message: Currency not supported
+                    code: INVALID_CURRENCY
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Policy not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Stripe API error or server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/payments/confirm:
+    post:
+      tags:
+        - Payments
+      summary: Confirm payment
+      description: |
+        Confirm a payment after successful Stripe payment processing.
+        This endpoint should be called after the card payment is completed on the client-side.
+      operationId: confirmPayment
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - paymentIntentId
+                - policyId
+              properties:
+                paymentIntentId:
+                  type: string
+                  description: Stripe PaymentIntent ID
+                  example: pi_1234567890
+                policyId:
+                  type: string
+                  description: Insurance policy ID
+                  example: 507f1f77bcf86cd799439011
+                metadata:
+                  type: object
+                  description: Additional payment metadata
+                  example:
+                    invoiceNumber: INV-2026-001
+                    reference: Monthly Premium
+            examples:
+              standard:
+                summary: Standard payment confirmation
+                value:
+                  paymentIntentId: pi_1234567890
+                  policyId: 507f1f77bcf86cd799439011
+      responses:
+        '200':
+          description: Payment confirmed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Payment confirmed and processed
+                  data:
+                    type: object
+                    properties:
+                      transactionId:
+                        type: string
+                        description: Internal transaction ID
+                        example: txn_1234567890
+                      paymentIntentId:
+                        type: string
+                        example: pi_1234567890
+                      amount:
+                        type: integer
+                        example: 5000
+                      currency:
+                        type: string
+                        example: usd
+                      status:
+                        type: string
+                        enum: [succeeded, processing, requires_action]
+                        example: succeeded
+                      policyId:
+                        type: string
+                        example: 507f1f77bcf86cd799439011
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: '2026-02-17T10:30:00Z'
+        '400':
+          description: Invalid payment details or payment failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                paymentFailed:
+                  value:
+                    message: Payment was declined by card issuer
+                    code: PAYMENT_DECLINED
+                invalidIntentId:
+                  value:
+                    message: Invalid PaymentIntent ID
+                    code: INVALID_INTENT_ID
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Policy or PaymentIntent not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Stripe API error or server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: User ID
+          example: 507f1f77bcf86cd799439011
+        email:
+          type: string
+          format: email
+          example: john.doe@gmail.com
+        firstName:
+          type: string
+          example: John
+        lastName:
+          type: string
+          example: Doe
+        phone:
+          type: string
+          example: '+1-555-0123'
+        createdAt:
+          type: string
+          format: date-time
+          example: '2026-02-17T10:30:00Z'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2026-02-17T10:30:00Z'
+
+    Policy:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: Policy ID
+          example: 507f1f77bcf86cd799439011
+        userId:
+          type: string
+          description: Related user ID
+          example: 507f1f77bcf86cd799439012
+        policyNumber:
+          type: string
+          example: POL-2026-001
+        vehicleInfo:
+          type: object
+          properties:
+            make:
+              type: string
+              example: Toyota
+            model:
+              type: string
+              example: Camry
+            year:
+              type: integer
+              example: 2023
+            vin:
+              type: string
+              example: 4T1BF1AK5CU123456
+        premium:
+          type: number
+          description: Annual premium amount
+          example: 1200.00
+        status:
+          type: string
+          enum: [active, inactive, cancelled, expired]
+          example: active
+        startDate:
+          type: string
+          format: date
+          example: '2026-02-17'
+        endDate:
+          type: string
+          format: date
+          example: '2027-02-17'
+        createdAt:
+          type: string
+          format: date-time
+          example: '2026-02-17T10:30:00Z'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2026-02-17T10:30:00Z'
+
+    Notification:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: Notification ID
+          example: 507f1f77bcf86cd799439011
+        userId:
+          type: string
+          description: Related user ID
+          example: 507f1f77bcf86cd799439012
+        type:
+          type: string
+          description: Notification type
+          enum: [policy_update, payment_reminder, payment_confirmation, policy_expiry, quote_available]
+          example: payment_reminder
+        title:
+          type: string
+          example: Payment Due
+        message:
+          type: string
+          example: Your monthly insurance premium is due on February 20th
+        read:
+          type: boolean
+          description: Whether notification has been read
+          example: false
+        actionUrl:
+          type: string
+          description: URL to take action on this notification
+          format: uri
+          example: /payments/policy-123
+        metadata:
+          type: object
+          description: Additional notification data
+          example:
+            policyId: 507f1f77bcf86cd799439011
+            amount: 1200
+        createdAt:
+          type: string
+          format: date-time
+          example: '2026-02-17T10:30:00Z'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2026-02-17T10:30:00Z'
+
+    Error:
+      type: object
+      required:
+        - message
+        - code
+      properties:
+        message:
+          type: string
+          description: Error message
+          example: An error occurred
+        code:
+          type: string
+          description: Error code for client-side handling
+          example: ERROR_CODE
+        details:
+          type: object
+          description: Additional error details
+          example:
+            field: email
+            value: invalid
+        timestamp:
+          type: string
+          format: date-time
+          example: '2026-02-17T10:30:00Z'
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT token obtained from the /api/auth/verify-otp endpoint.
+        
+        Example:
+        ```
+        Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        ```
+
+  responses:
+    UnauthorizedError:
+      description: Unauthorized - Missing or invalid authentication token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    NotFoundError:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    BadRequestError:
+      description: Bad request - Invalid parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    ServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+x-api-id: car-insurance-api
+x-api-lifecycle:
+  - status: stable
+    date: 2026-02-17
+    version: '1.0.0'
+
+x-rate-limit:
+  default: 100 requests per 15 minutes
+  auth:
+    send-otp: 3 requests per 15 minutes per email
+    verify-otp: 10 requests per 15 minutes per email
