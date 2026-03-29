@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { GiHamburgerMenu } from 'react-icons/gi'
 import { CgProfile } from 'react-icons/cg'
 import { MdDirectionsCar, MdVerifiedUser, MdSupportAgent } from 'react-icons/md'
@@ -8,6 +8,8 @@ import Quotes from './Quotes'
 import Menu from './Menu'
 import MyPolicies from './MyPolicies'
 import Notifications from './Notifications'
+import { usePageMeta } from '../hooks/usePageMeta'
+import { seoConfig } from '../utils/seoConfig'
 
 const carData = {
   toyota: ['Camry', 'Corolla', 'RAV4', 'Highlander', 'Prius'],
@@ -38,7 +40,20 @@ export default function Home() {
 
   const availableModels = carMake ? carData[carMake.toLowerCase()] || [] : []
 
-  const handleGetQuote = () => {
+  // Update SEO based on current view
+  useEffect(() => {
+    if (activeMenuSection === 'policies') {
+      usePageMeta(seoConfig.myPolicies)
+    } else if (activeMenuSection === 'notifications') {
+      usePageMeta(seoConfig.notifications)
+    } else if (showQuotes) {
+      usePageMeta(seoConfig.quotes)
+    } else if (showLoginModal) {
+      usePageMeta(seoConfig.login)
+    } else {
+      usePageMeta(seoConfig.home)
+    }
+  }, [activeMenuSection, showQuotes, showLoginModal])
     if (carMake && carModel && carYear) {
       setShowQuotes(true)
     } else {

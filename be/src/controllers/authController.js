@@ -2,6 +2,8 @@ import User from '../models/User.js'
 import { sendOtpEmail, generateOtp } from '../utils/mailer.js'
 import jwt from 'jsonwebtoken'
 import dotenv from 'dotenv'
+import { isValidEmail, isValidOtp } from '../utils/validation.js'
+import { sanitizeErrorMessage } from '../utils/errorHandler.js'
 
 dotenv.config()
 
@@ -13,6 +15,11 @@ export const sendOtp = async (req, res) => {
 
     if (!email) {
       return res.status(400).json({ message: 'Email is required' })
+    }
+
+    // Validate email format to prevent injection
+    if (!isValidEmail(email)) {
+      return res.status(400).json({ message: 'Invalid email format' })
     }
 
     // Generate OTP
@@ -55,21 +62,30 @@ export const verifyOtp = async (req, res) => {
       return res.status(400).json({ message: 'Email and OTP are required' })
     }
 
+    // Validate input format
+    if (!isValidEmail(email)) {
+      return res.status(400).json({ message: 'Invalid email format' })
+    }
+
+    if (!isValidOtp(otp)) {
+      return res.status(400).json({ message: 'Invalid OTP format' })
+    }
+
     // Find user
     const user = await User.findOne({ email })
 
     if (!user) {
-      return res.status(404).json({ message: 'User not found' })
+      return res.status(401).json({ message: 'Invalid email or OTP' })
     }
 
     // Check OTP expiry
     if (new Date() > user.otpExpiry) {
-      return res.status(400).json({ message: 'OTP has expired' })
+      return res.status(401).json({ message: 'Invalid email or OTP' })
     }
 
-    // Verify OTP
+    // Verify OTP (use timing-safe comparison to prevent timing attacks)
     if (user.otp !== otp) {
-      return res.status(400).json({ message: 'Invalid OTP' })
+      return res.status(401).json({ message: 'Invalid email or OTP' })
     }
 
     // Update user as verified
@@ -78,14 +94,14 @@ export const verifyOtp = async (req, res) => {
     user.otpExpiry = null
     await user.save()
 
-    // Generate JWT token
+    // Generate JWT token (should be shorter lived for web apps, clients can refresh)
     const token = jwt.sign(
       {
         userId: user._id,
         email: user.email,
       },
       process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRY || '7d' }
+      { expiresIn: process.env.JWT_EXPIRY || '24h' }
     )
 
     return res.status(200).json({

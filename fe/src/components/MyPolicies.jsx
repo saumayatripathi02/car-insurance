@@ -3,8 +3,13 @@ import { IoArrowBack } from 'react-icons/io5'
 import { MdDirectionsCar, MdCheckCircle, MdPending, MdClose, MdDownload } from 'react-icons/md'
 import axios from 'axios'
 import jsPDF from 'jspdf'
+import { usePageMeta } from '../hooks/usePageMeta'
+import { seoConfig } from '../utils/seoConfig'
 
 export default function MyPolicies({ user, onBack }) {
+  // Update SEO for my policies page
+  usePageMeta(seoConfig.myPolicies)
+
   const [policies, setPolicies] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)

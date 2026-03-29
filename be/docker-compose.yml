@@ -21,16 +21,18 @@ services:
     environment:
       MONGODB_URI: mongodb://mongo:27017/car-insurance
       PORT: 5000
-      NODE_ENV: development
+      NODE_ENV: production
       EMAIL_SERVICE: gmail
       EMAIL_USER: your-email@gmail.com
       EMAIL_PASSWORD: your-app-password
       OTP_EXPIRY: 300000
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:?ALLOWED_ORIGINS is required}
     depends_on:
       - mongo
     networks:
       - car-insurance-network
-    command: npm run dev
+    command: npm start
 
 volumes:
   mongo_data:

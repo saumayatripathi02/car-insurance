@@ -8,6 +8,8 @@ import {
 import { loadStripe } from '@stripe/stripe-js'
 import axios from 'axios'
 import { IoArrowBack } from 'react-icons/io5'
+import { usePageMeta } from '../hooks/usePageMeta'
+import { seoConfig } from '../utils/seoConfig'
 
 const API_BASE_URL = 'http://localhost:2005/api'
 
@@ -175,6 +177,9 @@ function PaymentForm({
 }
 
 export default function Payment({ quote, user, onPaymentSuccess, onBack }) {
+  // Update SEO for payment page
+  usePageMeta(seoConfig.payment)
+
   const [clientSecret, setClientSecret] = useState('')
   const [loading, setLoading] = useState(true)
   const stripePromise = getStripe()

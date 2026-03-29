@@ -1,7 +1,12 @@
 import { IoArrowBack } from 'react-icons/io5'
 import { MdCheckCircle, MdDirectionsCar, MdShield, MdCalendarToday, MdAttachMoney } from 'react-icons/md'
+import { usePageMeta } from '../hooks/usePageMeta'
+import { seoConfig } from '../utils/seoConfig'
 
 export default function PolicyDetails({ policy, onBack }) {
+  // Update SEO for policy details page
+  usePageMeta(seoConfig.policyDetails)
+
   const formatDate = (date) => {
     return new Date(date).toLocaleDateString('en-IN', {
       year: 'numeric',

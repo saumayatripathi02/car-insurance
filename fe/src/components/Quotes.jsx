@@ -3,6 +3,8 @@ import { IoArrowBack } from 'react-icons/io5'
 import { MdDirectionsCar, MdCalendarToday, MdShield } from 'react-icons/md'
 import Payment from './Payment'
 import PolicyDetails from './PolicyDetails'
+import { usePageMeta } from '../hooks/usePageMeta'
+import { seoConfig } from '../utils/seoConfig'
 
 const generateQuotes = (carYear, carMake, carModel) => {
   const basePrices = [15000, 18000, 22000, 25000, 28000]
@@ -27,6 +29,9 @@ const generateQuotes = (carYear, carMake, carModel) => {
 }
 
 export default function Quotes({ carYear, carMake, carModel, onBack, user }) {
+  // Update SEO for quotes page
+  usePageMeta(seoConfig.quotes)
+
   const [quotes, setQuotes] = useState(() =>
     generateQuotes(carYear, carMake, carModel)
   )

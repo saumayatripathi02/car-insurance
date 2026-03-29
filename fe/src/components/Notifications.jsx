@@ -7,8 +7,13 @@ import {
   MdError,
 } from 'react-icons/md'
 import axios from 'axios'
+import { usePageMeta } from '../hooks/usePageMeta'
+import { seoConfig } from '../utils/seoConfig'
 
 export default function Notifications({ user, onBack }) {
+  // Update SEO for notifications page
+  usePageMeta(seoConfig.notifications)
+
   const [notifications, setNotifications] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)

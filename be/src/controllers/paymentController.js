@@ -4,6 +4,7 @@ import User from '../models/User.js'
 import Notification from '../models/Notification.js'
 import dotenv from 'dotenv'
 import jwt from 'jsonwebtoken'
+import { isValidEmail, isValidAmount, isValidCarDetails } from '../utils/validation.js'
 
 dotenv.config()
 
@@ -16,6 +17,19 @@ export const createPaymentIntent = async (req, res) => {
 
     if (!email || !amount || !carDetails || !planDetails) {
       return res.status(400).json({ message: 'Missing required fields' })
+    }
+
+    // Validate input to prevent injection
+    if (!isValidEmail(email)) {
+      return res.status(400).json({ message: 'Invalid email format' })
+    }
+
+    if (!isValidAmount(amount)) {
+      return res.status(400).json({ message: 'Invalid amount' })
+    }
+
+    if (!isValidCarDetails(carDetails)) {
+      return res.status(400).json({ message: 'Invalid car details' })
     }
 
     // Amount in cents (Stripe uses smallest currency unit)
@@ -47,37 +61,41 @@ export const createPaymentIntent = async (req, res) => {
     })
   } catch (error) {
     console.error('Create payment intent error:', error)
-    return res.status(500).json({ message: error.message })
+    return res.status(500).json({ message: 'Internal server error' })
   }
 }
 
 // Confirm Payment and Save Policy
 export const confirmPayment = async (req, res) => {
   try {
-    const { paymentIntentId, email, carDetails, planDetails, amount, token } =
-      req.body
+    const { paymentIntentId, email, carDetails, planDetails, amount } = req.body
 
     if (!paymentIntentId || !email || !carDetails || !planDetails) {
       return res.status(400).json({ message: 'Missing required fields' })
     }
 
-    // Verify payment intent
+    // Validate input to prevent injection
+    if (!isValidEmail(email)) {
+      return res.status(400).json({ message: 'Invalid email format' })
+    }
+
+    if (!isValidAmount(amount)) {
+      return res.status(400).json({ message: 'Invalid amount' })
+    }
+
+    if (!isValidCarDetails(carDetails)) {
+      return res.status(400).json({ message: 'Invalid car details' })
+    }
+
+    // Verify payment intent with Stripe
     const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId)
 
     if (paymentIntent.status !== 'succeeded') {
       return res.status(400).json({ message: 'Payment not completed' })
     }
 
-    // Get user ID from token
-    let userId = null
-    if (token) {
-      try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET)
-        userId = decoded.userId
-      } catch (err) {
-        console.log('Token verification failed:', err.message)
-      }
-    }
+    // Get user ID from authenticated request (middleware)
+    let userId = req.user?.userId
 
     // Create policy
     const policy = new Policy({
@@ -161,7 +179,7 @@ export const confirmPayment = async (req, res) => {
     })
   } catch (error) {
     console.error('Confirm payment error:', error)
-    return res.status(500).json({ message: error.message })
+    return res.status(500).json({ message: 'Internal server error' })
   }
 }
 
@@ -180,6 +198,22 @@ export const getPolicyDetails = async (req, res) => {
       return res.status(404).json({ message: 'Policy not found' })
     }
 
+    // Authorization: User can only access their own policy
+    const userId = req.user?.userId
+    const userEmail = req.user?.email
+
+    if (userId) {
+      // Check if policy belongs to user
+      if (policy.userId && policy.userId.toString() !== userId) {
+        return res.status(403).json({ message: 'Unauthorized' })
+      }
+    } else if (userEmail) {
+      // Fall back to email check
+      if (policy.email !== userEmail) {
+        return res.status(403).json({ message: 'Unauthorized' })
+      }
+    }
+
     return res.status(200).json({
       policy: {
         id: policy._id,
@@ -196,36 +230,36 @@ export const getPolicyDetails = async (req, res) => {
     })
   } catch (error) {
     console.error('Get policy details error:', error)
-    return res.status(500).json({ message: error.message })
+    return res.status(500).json({ message: 'Internal server error' })
   }
 }
 
 // Get All Policies for User
 export const getAllPolicies = async (req, res) => {
   try {
-    const { email, token } = req.query
+    // Prefer authenticated user from middleware
+    let userId = req.user?.userId
+    let userEmail = req.user?.email
 
-    if (!email && !token) {
-      return res.status(400).json({ message: 'Email or token is required' })
+    // If not authenticated but email provided in query, validate it
+    if (!userId && req.query.email) {
+      if (!isValidEmail(req.query.email)) {
+        return res.status(400).json({ message: 'Invalid email format' })
+      }
+      userEmail = req.query.email
+    }
+
+    // Require at least one identifier
+    if (!userId && !userEmail) {
+      return res.status(401).json({ message: 'Unauthorized' })
     }
 
     let searchCriteria = {}
-
-    // Get user ID from token if provided
-    if (token) {
-      try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET)
-        searchCriteria.userId = decoded.userId
-      } catch (err) {
-        console.log('Token verification failed, using email:', err.message)
-        if (email) {
-          searchCriteria.email = email
-        } else {
-          return res.status(401).json({ message: 'Invalid token' })
-        }
-      }
-    } else {
-      searchCriteria.email = email
+    if (userId) {
+      searchCriteria.userId = userId
+    }
+    if (userEmail) {
+      searchCriteria.email = userEmail
     }
 
     const policies = await Policy.find(searchCriteria).sort({ createdAt: -1 })
@@ -256,6 +290,6 @@ export const getAllPolicies = async (req, res) => {
     })
   } catch (error) {
     console.error('Get all policies error:', error)
-    return res.status(500).json({ message: error.message })
+    return res.status(500).json({ message: 'Internal server error' })
   }
 }

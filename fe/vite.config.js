@@ -9,6 +9,12 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: true
+    sourcemap: false, // Disabled in production to prevent source code exposure
+    minify: 'terser', // Ensure minification for production
+    terserOptions: {
+      compress: {
+        drop_console: true, // Remove console logs in production
+      },
+    },
   }
 })

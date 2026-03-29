@@ -1,0 +1,27 @@
+# SEO Robots File
+# Tells search engines which pages to crawl and index
+
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /*.json$
+Disallow: /node_modules/
+
+# Sitemaps
+Sitemap: https://yourdomain.com/sitemap.xml
+
+# Crawl delay (in seconds)
+Crawl-delay: 1
+
+# Request rate limiting
+Request-rate: 30/1m
+
+# Specific rules for major search engines
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 0
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1

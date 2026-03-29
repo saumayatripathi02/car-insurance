@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { CgProfile } from 'react-icons/cg'
 import { IoArrowBack } from 'react-icons/io5'
 import axios from 'axios'
+import { setAuthToken, setUserInfo } from '../utils/tokenStorage'
 
 const API_BASE_URL = 'http://localhost:2005/api'
 
@@ -53,13 +54,17 @@ export default function Login({ onClose, onLoginSuccess }) {
       })
 
       if (response.status === 200) {
-        // Store token in localStorage
-        localStorage.setItem('token', response.data.token)
-        localStorage.setItem('user', JSON.stringify(response.data.user))
+        // Store token securely using utility functions
+        const tokenStored = setAuthToken(response.data.token)
+        const userStored = setUserInfo(response.data.user)
         
-        alert('Logged in successfully!')
-        onLoginSuccess(response.data.user)
-        onClose()
+        if (tokenStored && userStored) {
+          alert('Logged in successfully!')
+          onLoginSuccess(response.data.user)
+          onClose()
+        } else {
+          setError('Failed to store authentication data')
+        }
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to verify OTP')
