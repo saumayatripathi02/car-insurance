@@ -497,19 +497,7 @@ npm run preview
 4. Submit a pull request
 
 ## License
-
-[Your License Here]
-
-## Contact
-
-- Email: team@carinsurance.com
-- Issues: [GitHub Issues]
-
----
-
-**Last Updated:** February 2026
-
-**Version:** 1.0.0
+MIT
 
 For detailed setup instructions for specific components, see:
 - [Backend Setup](be/README.md)
