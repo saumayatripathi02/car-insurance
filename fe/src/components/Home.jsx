@@ -54,6 +54,8 @@ export default function Home() {
       usePageMeta(seoConfig.home)
     }
   }, [activeMenuSection, showQuotes, showLoginModal])
+
+  const handleGetQuote = () => {
     if (carMake && carModel && carYear) {
       setShowQuotes(true)
     } else {
