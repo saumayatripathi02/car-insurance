@@ -40,20 +40,19 @@ export default function Home() {
 
   const availableModels = carMake ? carData[carMake.toLowerCase()] || [] : []
 
+  // Determine which SEO config to use based on current view
+  const currentSeoConfig = activeMenuSection === 'policies' 
+    ? seoConfig.myPolicies
+    : activeMenuSection === 'notifications'
+    ? seoConfig.notifications
+    : showQuotes
+    ? seoConfig.quotes
+    : showLoginModal
+    ? seoConfig.login
+    : seoConfig.home
+
   // Update SEO based on current view
-  useEffect(() => {
-    if (activeMenuSection === 'policies') {
-      usePageMeta(seoConfig.myPolicies)
-    } else if (activeMenuSection === 'notifications') {
-      usePageMeta(seoConfig.notifications)
-    } else if (showQuotes) {
-      usePageMeta(seoConfig.quotes)
-    } else if (showLoginModal) {
-      usePageMeta(seoConfig.login)
-    } else {
-      usePageMeta(seoConfig.home)
-    }
-  }, [activeMenuSection, showQuotes, showLoginModal])
+  usePageMeta(currentSeoConfig)
 
   const handleGetQuote = () => {
     if (carMake && carModel && carYear) {

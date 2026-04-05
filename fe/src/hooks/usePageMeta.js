@@ -4,7 +4,7 @@
  */
 
 import { useEffect } from 'react'
-import { updatePageMeta } from './seoConfig'
+import { updatePageMeta } from '../utils/seoConfig'
 
 /**
  * Hook to update SEO meta tags for a page

@@ -6,7 +6,7 @@ import {
   MdWarning,
   MdError,
 } from 'react-icons/md'
-import axios from 'axios'
+import axiosConfig from '../utils/axiosConfig'
 import { usePageMeta } from '../hooks/usePageMeta'
 import { seoConfig } from '../utils/seoConfig'
 
@@ -28,27 +28,8 @@ export default function Notifications({ user, onBack }) {
       setLoading(true)
       setError(null)
 
-      const token = localStorage.getItem('token')
-      const userEmail = user?.email
-
-      if (!token && !userEmail) {
-        setError('User not authenticated')
-        setLoading(false)
-        return
-      }
-
-      const params = {}
-      if (token) {
-        params.token = token
-      }
-      if (userEmail) {
-        params.email = userEmail
-      }
-
-      const response = await axios.get(
-        'http://localhost:2005/api/notifications/list',
-        { params }
-      )
+      // Use configured axios client which automatically adds Authorization header
+      const response = await axiosConfig.get('/notifications/list')
 
       setNotifications(response.data.notifications || [])
       setUnreadCount(response.data.unreadCount || 0)
@@ -62,9 +43,7 @@ export default function Notifications({ user, onBack }) {
 
   const markAsRead = async (notificationId) => {
     try {
-      await axios.put(
-        `http://localhost:2005/api/notifications/${notificationId}/read`
-      )
+      await axiosConfig.put(`/notifications/${notificationId}/read`)
       // Update local state
       setNotifications(
         notifications.map((notif) =>
@@ -79,16 +58,7 @@ export default function Notifications({ user, onBack }) {
 
   const markAllAsRead = async () => {
     try {
-      const token = localStorage.getItem('token')
-      const userEmail = user?.email
-
-      await axios.put(
-        'http://localhost:2005/api/notifications/mark-all/read',
-        {
-          token,
-          email: userEmail,
-        }
-      )
+      await axiosConfig.put('/notifications/mark-all/read')
       // Update local state
       setNotifications(
         notifications.map((notif) => ({ ...notif, status: 'read' }))

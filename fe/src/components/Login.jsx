@@ -4,7 +4,7 @@ import { IoArrowBack } from 'react-icons/io5'
 import axios from 'axios'
 import { setAuthToken, setUserInfo } from '../utils/tokenStorage'
 
-const API_BASE_URL = 'http://localhost:2005/api'
+const API_BASE_URL = 'http://localhost:5000/api'
 
 export default function Login({ onClose, onLoginSuccess }) {
   const [email, setEmail] = useState('')

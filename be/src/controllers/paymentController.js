@@ -94,8 +94,24 @@ export const confirmPayment = async (req, res) => {
       return res.status(400).json({ message: 'Payment not completed' })
     }
 
-    // Get user ID from authenticated request (middleware)
+    // Get user ID from authenticated request or look up by email
     let userId = req.user?.userId
+
+    if (!userId) {
+      // Try to find user by email
+      let user = await User.findOne({ email: email })
+      
+      // If user doesn't exist, create one
+      if (!user) {
+        user = new User({
+          email: email,
+          isVerified: false,
+        })
+        await user.save()
+      }
+      
+      userId = user._id
+    }
 
     // Create policy
     const policy = new Policy({

@@ -11,7 +11,7 @@ import { IoArrowBack } from 'react-icons/io5'
 import { usePageMeta } from '../hooks/usePageMeta'
 import { seoConfig } from '../utils/seoConfig'
 
-const API_BASE_URL = 'http://localhost:2005/api'
+const API_BASE_URL = 'http://localhost:5000/api'
 
 // Initialize Stripe with your publishable key
 let stripePromise = null
