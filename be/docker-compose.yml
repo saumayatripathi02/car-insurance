@@ -1,33 +1,16 @@
 version: '3.8'
 
 services:
-  mongo:
-    image: mongo:7
-    container_name: car-insurance-mongo
+  backend:
+    build: .
+    container_name: car-insurance-backend
     ports:
-      - "27017:27017"
-    environment:
-      MONGO_INITDB_DATABASE: car-insurance
-    volumes:
-      - mongo_data:/data/db
+      - "5000:5000"
+    env_file:
+      - .env
     networks:
-      - car-insurance-network_be
-
-  # backend:
-  #   build: .
-  #   container_name: car-insurance-backend
-  #   ports:
-  #     - "5000:5000"
-  #   env_file:
-  #     - .env
-  #   depends_on:
-  #     - mongo
-  #   networks:
-  #     - car-insurance-network
-  #   command: npm start
-
-volumes:
-  mongo_data:
+      - car-insurance-network-be
+    command: npm start
 
 networks:
-  car-insurance-network_be:
+  car-insurance-network-be:
