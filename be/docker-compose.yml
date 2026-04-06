@@ -11,23 +11,23 @@ services:
     volumes:
       - mongo_data:/data/db
     networks:
-      - car-insurance-network
+      - car-insurance-network_be
 
-  backend:
-    build: .
-    container_name: car-insurance-backend
-    ports:
-      - "5000:5000"
-    env_file:
-      - .env
-    depends_on:
-      - mongo
-    networks:
-      - car-insurance-network
-    command: npm start
+  # backend:
+  #   build: .
+  #   container_name: car-insurance-backend
+  #   ports:
+  #     - "5000:5000"
+  #   env_file:
+  #     - .env
+  #   depends_on:
+  #     - mongo
+  #   networks:
+  #     - car-insurance-network
+  #   command: npm start
 
 volumes:
   mongo_data:
 
 networks:
-  car-insurance-network:
+  car-insurance-network_be:
