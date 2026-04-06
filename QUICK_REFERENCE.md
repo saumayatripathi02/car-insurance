@@ -210,28 +210,28 @@ Before deploying to production:
 
 ```bash
 # Test authentication required
-curl http://localhost:5000/api/notifications/list
+curl https://letmbe--fso2a2w.ashydune-d638a33c.westus2.azurecontainerapps.io/api/notifications/list
 # Expected: 401 Unauthorized
 
 # Test with token
-curl http://localhost:5000/api/notifications/list \
+curl https://letmbe--fso2a2w.ashydune-d638a33c.westus2.azurecontainerapps.io/api/notifications/list \
   -H "Authorization: Bearer YOUR_TOKEN"
 # Expected: 200 OK
 
 # Test rate limiting
 for i in {1..6}; do
-  curl -X POST http://localhost:5000/api/auth/send-otp \
+  curl -X POST https://letmbe--fso2a2w.ashydune-d638a33c.westus2.azurecontainerapps.io/api/auth/send-otp \
     -H "Content-Type: application/json" \
     -d '{"email":"test@example.com"}'
 done
 # 6th request expected: 429 Too Many Requests
 
 # Test CORS
-curl -H "Origin: https://evil.com" http://localhost:5000/api
+curl -H "Origin: https://evil.com" https://letmbe--fso2a2w.ashydune-d638a33c.westus2.azurecontainerapps.io/api
 # Expected: 403 Forbidden
 
 # Test security headers
-curl -i http://localhost:5000/health
+curl -i https://letmbe--fso2a2w.ashydune-d638a33c.westus2.azurecontainerapps.io/health
 # Expected: Helmet headers present (X-Frame-Options, etc)
 ```
 
@@ -247,7 +247,7 @@ export ALLOWED_ORIGINS=https://yourdomain.com
 docker-compose --env-file .env up -d
 
 # Verify deployment
-curl -i http://localhost:5000/health
+curl -i https://letmbe--fso2a2w.ashydune-d638a33c.westus2.azurecontainerapps.io/health
 ```
 
 ---

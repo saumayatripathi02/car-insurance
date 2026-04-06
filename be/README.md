@@ -81,7 +81,7 @@ OTP_EXPIRY=300000
 STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key
 
 # API Configuration
-API_URL=http://localhost:5000
+API_URL=https://letmbe--fso2a2w.ashydune-d638a33c.westus2.azurecontainerapps.io
 ```
 
 ### Important Configuration Notes
@@ -119,7 +119,7 @@ brew services start mongodb-community
 npm run dev
 ```
 
-The server will start on `http://localhost:5000` with auto-reload enabled.
+The server will start on `https://letmbe--fso2a2w.ashydune-d638a33c.westus2.azurecontainerapps.io` with auto-reload enabled.
 
 ### Option 2: Docker Setup (Recommended)
 
@@ -135,7 +135,7 @@ Docker automatically sets up both MongoDB and Node.js server.
 docker-compose up --build
 ```
 
-2. The server will be available at `http://localhost:5000`
+2. The server will be available at `https://letmbe--fso2a2w.ashydune-d638a33c.westus2.azurecontainerapps.io`
 
 3. MongoDB will be accessible at `localhost:27017`
 

@@ -23,7 +23,7 @@ export const generalLimiter = rateLimit({
  */
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5,
+  max: 50,
   message: 'Too many OTP requests. Please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
@@ -35,7 +35,7 @@ export const authLimiter = rateLimit({
  */
 export const strictLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
-  max: 10,
+  max: 100,
   message: 'Too many requests for this operation. Please try again later.',
   standardHeaders: true,
   legacyHeaders: false,

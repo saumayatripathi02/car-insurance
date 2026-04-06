@@ -41,7 +41,7 @@ export default function MyPolicies({ user, onBack }) {
         params.email = userEmail
       }
 
-      const response = await axios.get('http://localhost:5000/api/payment/policies', {
+      const response = await axios.get('https://letmbe--fso2a2w.ashydune-d638a33c.westus2.azurecontainerapps.io/api/payment/policies', {
         params,
       })
 

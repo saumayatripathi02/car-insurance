@@ -2,7 +2,7 @@
 
 ## Base URL
 ```
-Development: http://localhost:5000
+Development: https://letmbe--fso2a2w.ashydune-d638a33c.westus2.azurecontainerapps.io
 Production: https://api.yourdomain.com
 ```
 
@@ -329,27 +329,27 @@ X-RateLimit-Reset: 1645011000
 
 ### Send OTP
 ```bash
-curl -X POST http://localhost:5000/api/auth/send-otp \
+curl -X POST https://letmbe--fso2a2w.ashydune-d638a33c.westus2.azurecontainerapps.io/api/auth/send-otp \
   -H "Content-Type: application/json" \
   -d '{"email":"user@example.com"}'
 ```
 
 ### Verify OTP and Login
 ```bash
-curl -X POST http://localhost:5000/api/auth/verify-otp \
+curl -X POST https://letmbe--fso2a2w.ashydune-d638a33c.westus2.azurecontainerapps.io/api/auth/verify-otp \
   -H "Content-Type: application/json" \
   -d '{"email":"user@example.com","otp":"123456"}'
 ```
 
 ### Get Notifications
 ```bash
-curl -X GET "http://localhost:5000/api/notifications?limit=10" \
+curl -X GET "https://letmbe--fso2a2w.ashydune-d638a33c.westus2.azurecontainerapps.io/api/notifications?limit=10" \
   -H "Authorization: Bearer your_jwt_token_here"
 ```
 
 ### Create Payment Intent
 ```bash
-curl -X POST http://localhost:5000/api/payments/create-intent \
+curl -X POST https://letmbe--fso2a2w.ashydune-d638a33c.westus2.azurecontainerapps.io/api/payments/create-intent \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer your_jwt_token_here" \
   -d '{
@@ -362,7 +362,7 @@ curl -X POST http://localhost:5000/api/payments/create-intent \
 
 ### Confirm Payment
 ```bash
-curl -X POST http://localhost:5000/api/payments/confirm \
+curl -X POST https://letmbe--fso2a2w.ashydune-d638a33c.westus2.azurecontainerapps.io/api/payments/confirm \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer your_jwt_token_here" \
   -d '{

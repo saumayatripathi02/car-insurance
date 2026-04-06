@@ -36,7 +36,7 @@ info:
     name: MIT
 
 servers:
-  - url: http://localhost:5000
+  - url: https://letmbe--fso2a2w.ashydune-d638a33c.westus2.azurecontainerapps.io
     description: Development server
   - url: https://api.yourdomain.com
     description: Production server

@@ -103,7 +103,7 @@ npm run dev
 
 6. **Access the application**
 - Frontend: http://localhost:5173
-- Backend API: http://localhost:5000
+- Backend API: https://letmbe--fso2a2w.ashydune-d638a33c.westus2.azurecontainerapps.io
 - MongoDB: localhost:27017
 
 #### Docker Commands
@@ -166,7 +166,7 @@ brew services start mongodb-community
 npm run dev
 ```
 
-Backend runs on: http://localhost:5000
+Backend runs on: https://letmbe--fso2a2w.ashydune-d638a33c.westus2.azurecontainerapps.io
 
 #### Frontend Setup
 
@@ -187,7 +187,7 @@ cp .env.example .env.local
 
 4. **Configure environment**
 Edit `fe/.env.local` with:
-- `VITE_API_URL=http://localhost:5000`
+- `VITE_API_URL=https://letmbe--fso2a2w.ashydune-d638a33c.westus2.azurecontainerapps.io`
 - `VITE_STRIPE_PUBLIC_KEY=pk_test_...`
 
 5. **Start development server**
@@ -229,7 +229,7 @@ Critical variables:
 
 ```bash
 # Backend API
-VITE_API_URL=http://localhost:5000
+VITE_API_URL=https://letmbe--fso2a2w.ashydune-d638a33c.westus2.azurecontainerapps.io
 
 # Stripe Public Key
 VITE_STRIPE_PUBLIC_KEY=pk_test_your_key
@@ -324,7 +324,7 @@ Error: listen EADDRINUSE :::5000
 Error: Network Error or CORS issue
 ```
 **Solution:**
-- Check backend is running on `http://localhost:5000`
+- Check backend is running on `https://letmbe--fso2a2w.ashydune-d638a33c.westus2.azurecontainerapps.io`
 - Verify `VITE_API_URL` in `.env.local`
 - Check browser console for CORS errors
 
@@ -379,7 +379,7 @@ npm run dev -- --port 3000
 
 **Using curl:**
 ```bash
-curl -X POST http://localhost:5000/api/auth/send-otp \
+curl -X POST https://letmbe--fso2a2w.ashydune-d638a33c.westus2.azurecontainerapps.io/api/auth/send-otp \
   -H "Content-Type: application/json" \
   -d '{"email":"test@example.com"}'
 ```

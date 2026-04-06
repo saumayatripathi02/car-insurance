@@ -11,7 +11,7 @@ import { getAuthToken } from './tokenStorage'
  * Create axios instance with security headers
  */
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api',
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'https://letmbe--fso2a2w.ashydune-d638a33c.westus2.azurecontainerapps.io/api',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
