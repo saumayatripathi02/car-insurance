@@ -1,7 +1,14 @@
 import Notification from '../models/Notification.js'
 import { isValidEmail } from '../utils/validation.js'
+import {
+  getFromCache,
+  setCache,
+  deleteFromCache,
+  deleteByPattern,
+  notificationCacheKeys,
+} from '../utils/redis.js'
 
-// Get all notifications for user
+// Get all notifications for user (with Redis caching)
 export const getNotifications = async (req, res) => {
   try {
     // Prefer authenticated user from middleware
@@ -22,6 +29,22 @@ export const getNotifications = async (req, res) => {
       return res.status(401).json({ message: 'Unauthorized' })
     }
 
+    // Try to get from cache
+    let cacheKey = null
+    if (userId) {
+      cacheKey = notificationCacheKeys.byUserId(userId)
+    } else if (userEmail) {
+      cacheKey = notificationCacheKeys.byEmail(userEmail)
+    }
+
+    if (cacheKey) {
+      const cached = await getFromCache(cacheKey)
+      if (cached) {
+        console.log(`Cache hit for ${cacheKey}`)
+        return res.status(200).json(cached)
+      }
+    }
+
     // Build search criteria
     let searchCriteria = {}
     if (userId) {
@@ -37,11 +60,18 @@ export const getNotifications = async (req, res) => {
 
     const unreadCount = notifications.filter((n) => n.status === 'unread').length
 
-    return res.status(200).json({
+    const response = {
       notifications,
       unreadCount,
       count: notifications.length,
-    })
+    }
+
+    // Cache the response (1 hour TTL)
+    if (cacheKey) {
+      await setCache(cacheKey, response, 3600)
+    }
+
+    return res.status(200).json(response)
   } catch (error) {
     console.error('Get notifications error:', error)
     return res.status(500).json({ message: 'Internal server error' })
@@ -89,6 +119,13 @@ export const markAsRead = async (req, res) => {
       { new: true }
     )
 
+    // Invalidate user's notification cache
+    const cacheKeyUser = notificationCacheKeys.byUserId(notification.userId)
+    const cacheKeyEmail = notificationCacheKeys.byEmail(notification.email)
+    
+    await deleteFromCache(cacheKeyUser)
+    await deleteFromCache(cacheKeyEmail)
+
     return res.status(200).json({
       message: 'Notification marked as read',
       notification: updatedNotification,
@@ -129,6 +166,14 @@ export const markAllAsRead = async (req, res) => {
     }
 
     await Notification.updateMany(searchCriteria, { status: 'read' })
+
+    // Invalidate user's notification cache
+    if (userId) {
+      await deleteFromCache(notificationCacheKeys.byUserId(userId))
+    }
+    if (userEmail) {
+      await deleteFromCache(notificationCacheKeys.byEmail(userEmail))
+    }
 
     return res.status(200).json({
       message: 'All notifications marked as read',

@@ -6,6 +6,7 @@ import cors from 'cors'
 import helmet from 'helmet'
 import dotenv from 'dotenv'
 import { connectDB } from './utils/db.js'
+import { initializeRedis } from './utils/redis.js'
 import { generalLimiter, authLimiter } from './middleware/rateLimitMiddleware.js'
 import { optionalAuthMiddleware } from './middleware/authMiddleware.js'
 import authRoutes from './routes/authRoutes.js'
@@ -44,8 +45,16 @@ app.use(generalLimiter)
 // Optional authentication middleware for all routes
 app.use(optionalAuthMiddleware)
 
-// Connect to MongoDB
-connectDB()
+// Initialize database and cache
+const initializeServices = async () => {
+  await connectDB()
+  await initializeRedis()
+}
+
+initializeServices().catch((error) => {
+  console.error('Service initialization error:', error)
+  process.exit(1)
+})
 
 // Routes
 app.use('/api/auth', authLimiter, authRoutes)
