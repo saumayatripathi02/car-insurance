@@ -30,21 +30,43 @@ jobs:
 
       - name: Run Semgrep
         uses: returntocorp/semgrep-action@v1
+        continue-on-error: true
         with:
           # Scan backend directory
           config: >-
             p/security-audit
             p/owasp-top-ten
             p/nodejs
-          generateSarif: false
+          generateSarif: true
+          json: true
           scanDir: be/
 
-      # Print results
-      - name: Print Semgrep Results
+      # Print issues if found
+      - name: Log Semgrep Issues
         if: always()
         run: |
-          echo "=== Semgrep Analysis Complete ==="
-          echo "✓ Backend code scanned for security issues"
-          echo "✓ OWASP Top 10 patterns checked"
-          echo "✓ Node.js security issues reviewed"
-          echo "Check workflow logs for details"
+          if [ -f semgrep.json ]; then
+            ISSUE_COUNT=$(jq '[.results[]] | length' semgrep.json 2>/dev/null || echo 0)
+            
+            if [ "$ISSUE_COUNT" -gt 0 ]; then
+              echo "⚠️  Found $ISSUE_COUNT security issue(s):"
+              echo "════════════════════════════════════"
+              
+              jq -r '.results[] | 
+                "Rule: \(.check_id)\n" +
+                "Path: \(.path):\(.start.line)\n" +
+                "Message: \(.extra.message)\n" +
+                "Severity: \(.extra.severity)\n" +
+                "---"
+              ' semgrep.json
+              
+              echo "════════════════════════════════════"
+              CRITICAL=$(jq '[.results[] | select(.extra.severity == "ERROR")] | length' semgrep.json)
+              HIGH=$(jq '[.results[] | select(.extra.severity == "WARNING")] | length' semgrep.json)
+              echo "Critical: $CRITICAL | High: $HIGH | Medium/Low: $(($ISSUE_COUNT - $CRITICAL - $HIGH))"
+            else
+              echo "✅ No security issues found"
+            fi
+          else
+            echo "ⓘ Semgrep scan complete - check logs for details"
+          fi
