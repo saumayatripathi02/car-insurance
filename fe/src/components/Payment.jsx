@@ -11,7 +11,7 @@ import { IoArrowBack } from 'react-icons/io5'
 import { usePageMeta } from '../hooks/usePageMeta'
 import { seoConfig } from '../utils/seoConfig'
 
-const API_BASE_URL = 'https://letmbe--fso2a2w.ashydune-d638a33c.westus2.azurecontainerapps.io/api'
+const API_BASE_URL = 'https://letmbe.ashydune-d638a33c.westus2.azurecontainerapps.io/api'
 
 // Initialize Stripe with your publishable key
 let stripePromise = null
@@ -76,7 +76,7 @@ function PaymentForm({
             coverage: quote.coverage,
           },
           amount: quote.price,
-          token: localStorage.getItem('token'),
+          token: localStorage.getItem('auth_token'),
         })
 
         if (response.status === 200) {

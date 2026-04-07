@@ -18,10 +18,13 @@ dotenv.config()
 const app = express()
 const PORT = process.env.PORT || 5000
 
+// MUST be set BEFORE rate limiter to ensure X-Forwarded-For is trusted
+app.set('trust proxy', 1)
+
 // Security Middleware
 
 // Helmet - Sets various HTTP headers for security
-app.use(helmet())
+// app.use(helmet())
 
 // CORS - Restrict to allowed origins only
 const allowedOrigins = ('*').split(',')
@@ -47,14 +50,20 @@ app.use(optionalAuthMiddleware)
 
 // Initialize database and cache
 const initializeServices = async () => {
-  await connectDB()
-  await initializeRedis()
+  try {
+    await connectDB()
+  } catch (error) {
+    console.error('⚠️  Database initialization error:', error.message)
+  }
+
+  try {
+    await initializeRedis()
+  } catch (error) {
+    console.error('⚠️  Redis initialization error:', error.message)
+  }
 }
 
-initializeServices().catch((error) => {
-  console.error('Service initialization error:', error)
-  process.exit(1)
-})
+initializeServices()
 
 // Routes
 app.use('/api/auth', authLimiter, authRoutes)

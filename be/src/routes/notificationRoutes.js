@@ -4,12 +4,12 @@ import {
   markAsRead,
   markAllAsRead,
 } from '../controllers/notificationController.js'
-import { optionalAuthMiddleware } from '../middleware/authMiddleware.js'
 
 const router = express.Router()
 
-router.get('/list', optionalAuthMiddleware, getNotifications)
-router.put('/:notificationId/read', optionalAuthMiddleware, markAsRead)
-router.put('/mark-all/read', optionalAuthMiddleware, markAllAsRead)
+// All endpoints require userId query parameter
+router.get('/list-notifications', getNotifications)
+router.put('/:notificationId/read', markAsRead)
+router.put('/mark-all/read', markAllAsRead)
 
 export default router

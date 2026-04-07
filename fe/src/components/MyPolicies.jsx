@@ -24,7 +24,7 @@ export default function MyPolicies({ user, onBack }) {
       setLoading(true)
       setError(null)
 
-      const token = localStorage.getItem('token')
+      const token = localStorage.getItem('auth_token')
       const userEmail = user?.email
 
       if (!token && !userEmail) {
@@ -41,7 +41,7 @@ export default function MyPolicies({ user, onBack }) {
         params.email = userEmail
       }
 
-      const response = await axios.get('https://letmbe--fso2a2w.ashydune-d638a33c.westus2.azurecontainerapps.io/api/payment/policies', {
+      const response = await axios.get('https://letmbe.ashydune-d638a33c.westus2.azurecontainerapps.io/api/payment/policies', {
         params,
       })
 

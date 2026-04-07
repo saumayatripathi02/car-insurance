@@ -48,7 +48,7 @@ export function setupSwagger(app, options = {}) {
           swaggerOptions: {
             urls: [
               {
-                url: `${process.env.API_URL || 'https://letmbe--fso2a2w.ashydune-d638a33c.westus2.azurecontainerapps.io'}/api-docs/swagger.json`,
+                url: `${process.env.API_URL || 'https://letmbe.ashydune-d638a33c.westus2.azurecontainerapps.io'}/api-docs/swagger.json`,
                 name: 'Development',
               },
             ],

@@ -20,7 +20,7 @@ React + Vite frontend application for Car Insurance management system with Tailw
 - **npm**: v9.0.0 or higher
 
 ### Backend Services
-- **Backend API**: Running on `https://letmbe--fso2a2w.ashydune-d638a33c.westus2.azurecontainerapps.io` (during development)
+- **Backend API**: Running on `https://letmbe.ashydune-d638a33c.westus2.azurecontainerapps.io` (during development)
 - **Stripe Account**: For payment processing
 
 ## Installation
@@ -56,7 +56,7 @@ Create a `.env.local` file in the `fe/` directory with the following variables:
 
 ```bash
 # Backend API Configuration
-VITE_API_URL=https://letmbe--fso2a2w.ashydune-d638a33c.westus2.azurecontainerapps.io
+VITE_API_URL=https://letmbe.ashydune-d638a33c.westus2.azurecontainerapps.io
 
 # Stripe Public Key (for client-side)
 VITE_STRIPE_PUBLIC_KEY=pk_test_your_stripe_public_key
@@ -73,7 +73,7 @@ VITE_APP_ENV=development
 3. Add `VITE_STRIPE_PUBLIC_KEY` to your `.env.local`
 
 **Backend API URL:**
-- Development: `https://letmbe--fso2a2w.ashydune-d638a33c.westus2.azurecontainerapps.io`
+- Development: `https://letmbe.ashydune-d638a33c.westus2.azurecontainerapps.io`
 - Production: Your deployed backend URL
 
 **Environment Variables Naming:**
@@ -309,7 +309,7 @@ npm run dev -- --port 3000
 ```
 
 **Backend API Connection Failed**
-- Ensure backend is running on `https://letmbe--fso2a2w.ashydune-d638a33c.westus2.azurecontainerapps.io`
+- Ensure backend is running on `https://letmbe.ashydune-d638a33c.westus2.azurecontainerapps.io`
 - Check `VITE_API_URL` in `.env.local`
 - Check browser console for CORS errors
 

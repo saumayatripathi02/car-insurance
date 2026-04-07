@@ -127,7 +127,7 @@ app.listen(PORT, () => {
 //    npm run dev
 //
 // 2. Open in browser:
-//    https://letmbe--fso2a2w.ashydune-d638a33c.westus2.azurecontainerapps.io/api-docs
+//    https://letmbe.ashydune-d638a33c.westus2.azurecontainerapps.io/api-docs
 //
 // 3. You can now:
 //    - View all endpoints
@@ -136,7 +136,7 @@ app.listen(PORT, () => {
 //    - Copy curl commands
 //
 // 4. Additional endpoints:
-//    - Swagger JSON: https://letmbe--fso2a2w.ashydune-d638a33c.westus2.azurecontainerapps.io/api-docs/swagger.json
-//    - Swagger YAML: https://letmbe--fso2a2w.ashydune-d638a33c.westus2.azurecontainerapps.io/api-docs/swagger.yaml
+//    - Swagger JSON: https://letmbe.ashydune-d638a33c.westus2.azurecontainerapps.io/api-docs/swagger.json
+//    - Swagger YAML: https://letmbe.ashydune-d638a33c.westus2.azurecontainerapps.io/api-docs/swagger.yaml
 
 // ============================================================================

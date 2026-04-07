@@ -26,7 +26,7 @@ import swaggerSpec from './docs/swagger.js'; // or require YAML with `yaml` pack
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 ```
 
-3. Access the Swagger UI at: `https://letmbe--fso2a2w.ashydune-d638a33c.westus2.azurecontainerapps.io/api-docs`
+3. Access the Swagger UI at: `https://letmbe.ashydune-d638a33c.westus2.azurecontainerapps.io/api-docs`
 
 #### Option B: Using Stoplight Proxy
 
@@ -99,7 +99,7 @@ The JWT token is obtained from the `/api/auth/verify-otp` endpoint after success
 ### Send OTP
 
 ```bash
-curl -X POST https://letmbe--fso2a2w.ashydune-d638a33c.westus2.azurecontainerapps.io/api/auth/send-otp \
+curl -X POST https://letmbe.ashydune-d638a33c.westus2.azurecontainerapps.io/api/auth/send-otp \
   -H "Content-Type: application/json" \
   -d '{"email":"user@example.com"}'
 ```
@@ -107,7 +107,7 @@ curl -X POST https://letmbe--fso2a2w.ashydune-d638a33c.westus2.azurecontainerapp
 ### Verify OTP
 
 ```bash
-curl -X POST https://letmbe--fso2a2w.ashydune-d638a33c.westus2.azurecontainerapps.io/api/auth/verify-otp \
+curl -X POST https://letmbe.ashydune-d638a33c.westus2.azurecontainerapps.io/api/auth/verify-otp \
   -H "Content-Type: application/json" \
   -d '{"email":"user@example.com","otp":"123456"}'
 ```
@@ -115,14 +115,14 @@ curl -X POST https://letmbe--fso2a2w.ashydune-d638a33c.westus2.azurecontainerapp
 ### Get Notifications
 
 ```bash
-curl -X GET https://letmbe--fso2a2w.ashydune-d638a33c.westus2.azurecontainerapps.io/api/notifications?limit=10 \
+curl -X GET https://letmbe.ashydune-d638a33c.westus2.azurecontainerapps.io/api/notifications?limit=10 \
   -H "Authorization: Bearer <jwt_token>"
 ```
 
 ### Create Payment Intent
 
 ```bash
-curl -X POST https://letmbe--fso2a2w.ashydune-d638a33c.westus2.azurecontainerapps.io/api/payments/create-intent \
+curl -X POST https://letmbe.ashydune-d638a33c.westus2.azurecontainerapps.io/api/payments/create-intent \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <jwt_token>" \
   -d '{
@@ -225,7 +225,7 @@ export const getNotifications = (limit = 20, skip = 0) => {
 const axios = require('axios');
 
 const apiClient = axios.create({
-  baseURL: 'https://letmbe--fso2a2w.ashydune-d638a33c.westus2.azurecontainerapps.io',
+  baseURL: 'https://letmbe.ashydune-d638a33c.westus2.azurecontainerapps.io',
 });
 
 async function testAuthFlow() {

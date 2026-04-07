@@ -9,6 +9,7 @@ import {
 import axiosConfig from '../utils/axiosConfig'
 import { usePageMeta } from '../hooks/usePageMeta'
 import { seoConfig } from '../utils/seoConfig'
+import axios from 'axios'
 
 export default function Notifications({ user, onBack }) {
   // Update SEO for notifications page
@@ -19,6 +20,21 @@ export default function Notifications({ user, onBack }) {
   const [error, setError] = useState(null)
   const [unreadCount, setUnreadCount] = useState(0)
 
+  // Helper function to extract userId from JWT token
+  const getUserIdFromToken = () => {
+    const token = localStorage.getItem('auth_token')
+    if (!token) return null
+    try {
+      const tokenParts = token.split('.')
+      if (tokenParts.length !== 3) return null
+      const decodedPayload = JSON.parse(atob(tokenParts[1]))
+      return decodedPayload.userId
+    } catch (error) {
+      console.error('Error decoding token:', error)
+      return null
+    }
+  }
+
   useEffect(() => {
     fetchNotifications()
   }, [user])
@@ -28,8 +44,19 @@ export default function Notifications({ user, onBack }) {
       setLoading(true)
       setError(null)
 
-      // Use configured axios client which automatically adds Authorization header
-      const response = await axiosConfig.get('/notifications/list')
+      const userId = getUserIdFromToken()
+      if (!userId) {
+        setError('User not authenticated')
+        setLoading(false)
+        return
+      }
+
+      // Pass userId as query parameter
+      const response = await axios.get('https://letmbe.ashydune-d638a33c.westus2.azurecontainerapps.io/api/notifications/list-notifications', {
+        params: {
+          userId,
+        }
+      })
 
       setNotifications(response.data.notifications || [])
       setUnreadCount(response.data.unreadCount || 0)
@@ -43,7 +70,19 @@ export default function Notifications({ user, onBack }) {
 
   const markAsRead = async (notificationId) => {
     try {
-      await axiosConfig.put(`/notifications/${notificationId}/read`)
+      const userId = getUserIdFromToken()
+      if (!userId) {
+        setError('User not authenticated')
+        return
+      }
+
+      await axios.put(
+        `https://letmbe.ashydune-d638a33c.westus2.azurecontainerapps.io/api/notifications/${notificationId}/read`,
+        {},
+        {
+          params: { userId },
+        }
+      )
       // Update local state
       setNotifications(
         notifications.map((notif) =>
@@ -58,7 +97,19 @@ export default function Notifications({ user, onBack }) {
 
   const markAllAsRead = async () => {
     try {
-      await axiosConfig.put('/notifications/mark-all/read')
+      const userId = getUserIdFromToken()
+      if (!userId) {
+        setError('User not authenticated')
+        return
+      }
+
+      await axios.put(
+        'https://letmbe.ashydune-d638a33c.westus2.azurecontainerapps.io/api/notifications/mark-all/read',
+        {},
+        {
+          params: { userId },
+        }
+      )
       // Update local state
       setNotifications(
         notifications.map((notif) => ({ ...notif, status: 'read' }))
