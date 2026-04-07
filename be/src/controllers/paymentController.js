@@ -5,6 +5,7 @@ import Notification from '../models/Notification.js'
 import dotenv from 'dotenv'
 import jwt from 'jsonwebtoken'
 import { isValidEmail, isValidAmount, isValidCarDetails } from '../utils/validation.js'
+import { deleteFromCache, notificationCacheKeys } from '../utils/redis.js'
 
 dotenv.config()
 
@@ -178,6 +179,9 @@ export const confirmPayment = async (req, res) => {
     })
 
     await policyNotification.save()
+
+    // Clear Redis cache for user's notifications so fresh data is fetched next time
+    await deleteFromCache(notificationCacheKeys.byUserId(userId))
 
     return res.status(200).json({
       message: 'Payment successful',
