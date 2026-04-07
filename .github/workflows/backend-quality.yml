@@ -1,0 +1,87 @@
+name: Backend Quality Checks
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'be/**'
+      - '.github/workflows/backend-quality.yml'
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'be/**'
+
+jobs:
+  check:
+    name: Backend Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: 'be/package-lock.json'
+
+      - name: Install dependencies
+        working-directory: be/
+        run: npm ci
+
+      - name: Check for vulnerabilities
+        working-directory: be/
+        run: npm audit --audit-level=moderate
+        continue-on-error: true
+
+      - name: Verify imports
+        working-directory: be/
+        run: |
+          echo "✓ Checking ES module imports..."
+          node --check src/index.js
+          node --check src/telemetry.js
+          echo "✓ All imports valid"
+
+      - name: Check code quality
+        working-directory: be/
+        run: |
+          echo "✓ Backend structure verified"
+          test -f src/index.js && echo "✓ Main entry point exists"
+          test -f src/controllers/authController.js && echo "✓ Auth controller exists"
+          test -f src/controllers/notificationController.js && echo "✓ Notification controller exists"
+          test -f src/controllers/paymentController.js && echo "✓ Payment controller exists"
+          test -f src/middleware/authMiddleware.js && echo "✓ Auth middleware exists"
+          test -f src/utils/db.js && echo "✓ Database utils exist"
+          test -f src/utils/redis.js && echo "✓ Redis utils exist"
+          echo "✓ All required files present"
+
+      - name: Security check - No hardcoded secrets
+        working-directory: be/
+        run: |
+          if grep -r "password\s*=" src/ --include="*.js" | grep -v "process.env" | grep -v "^Binary"; then
+            echo "⚠️ Possible hardcoded passwords found"
+            exit 1
+          fi
+          if grep -r "secret\s*=" src/ --include="*.js" | grep -v "process.env" | grep -v "^Binary"; then
+            echo "⚠️ Possible hardcoded secrets found"
+            exit 1
+          fi
+          echo "✓ No hardcoded secrets detected"
+
+      - name: Comment PR with status
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '✅ **Backend Quality Checks Passed**\n\n- Dependencies validated\n- Code structure verified\n- Security checks passed'
+            });

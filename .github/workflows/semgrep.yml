@@ -1,0 +1,102 @@
+name: Semgrep Security Analysis
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'be/**'
+      - '.github/workflows/semgrep.yml'
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'be/**'
+
+jobs:
+  semgrep:
+    name: Semgrep Analysis
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Run Semgrep
+        uses: returntocorp/semgrep-action@v1
+        with:
+          # Scan backend directory
+          config: >-
+            p/security-audit
+            p/owasp-top-ten
+            p/nodejs
+          generateSarif: true
+          scanDir: be/
+
+      # Upload SARIF report to GitHub Security tab
+      - name: Upload SARIF report
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: semgrep.sarif
+          category: semgrep
+
+      # Comment on PR with findings
+      - name: Comment PR with Security Findings
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const sarif = JSON.parse(fs.readFileSync('semgrep.sarif', 'utf8'));
+            const findings = sarif.runs[0].results || [];
+            
+            if (findings.length === 0) {
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: '✅ **Semgrep Analysis**: No security issues found in backend code.'
+              });
+              return;
+            }
+            
+            let comment = `⚠️ **Semgrep Security Analysis** found ${findings.length} issue(s):\n\n`;
+            
+            findings.slice(0, 10).forEach(finding => {
+              const rule = finding.ruleId || 'unknown';
+              const message = finding.message.text || 'No description';
+              const level = finding.level || 'note';
+              comment += `- **${level.toUpperCase()}**: ${rule}\n  ${message}\n`;
+            });
+            
+            if (findings.length > 10) {
+              comment += `\n... and ${findings.length - 10} more issues. Check GitHub Security tab for full report.`;
+            }
+            
+            comment += '\n\n📖 [View Semgrep Rules](https://semgrep.dev/explore)';
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+      # Fail if critical/high severity issues found
+      - name: Check for Critical Issues
+        if: always()
+        run: |
+          if [ -f semgrep.sarif ]; then
+            CRITICAL_COUNT=$(jq '[.runs[0].results[] | select(.level == "error")] | length' semgrep.sarif)
+            if [ "$CRITICAL_COUNT" -gt 0 ]; then
+              echo "❌ Found $CRITICAL_COUNT critical security issue(s)"
+              exit 1
+            fi
+          fi
