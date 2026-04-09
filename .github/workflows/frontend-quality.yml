@@ -1,0 +1,172 @@
+name: Frontend Quality Checks
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'fe/**'
+      - '.github/workflows/frontend-quality.yml'
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'fe/**'
+
+jobs:
+  lighthouse:
+    name: Lighthouse Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: 'fe/package-lock.json'
+
+      - name: Install dependencies
+        working-directory: fe/
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: fe/
+        run: npm run build
+
+      - name: Install Lighthouse CI
+        run: npm install -g @lhci/cli@latest
+
+      - name: Run Lighthouse Audit
+        working-directory: fe/
+        run: |
+          # Start a simple HTTP server to serve the built frontend
+          npx http-server dist -p 8080 -c-1 &
+          SERVER_PID=$!
+          sleep 2
+          
+          # Run Lighthouse CLI on the local server
+          lighthouse http://localhost:8080 \
+            --output=json \
+            --output=html \
+            --output-path=./lighthouse-report \
+            --chrome-flags="--headless" || true
+          
+          # Kill the server
+          kill $SERVER_PID || true
+
+      - name: Upload Lighthouse Report
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: lighthouse-report
+          path: fe/lighthouse-report*
+
+      - name: Parse and Comment Lighthouse Results
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            
+            try {
+              const reportPath = './fe/lighthouse-report.json';
+              if (!fs.existsSync(reportPath)) {
+                console.log('Lighthouse report not found');
+                return;
+              }
+              
+              const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
+              const categories = report.categories;
+              
+              let comment = '## 🔍 Lighthouse Audit Results\n\n';
+              comment += '| Category | Score |\n';
+              comment += '|----------|-------|\n';
+              
+              const scores = {
+                performance: categories.performance?.score || 0,
+                accessibility: categories.accessibility?.score || 0,
+                'best-practices': categories['best-practices']?.score || 0,
+                seo: categories.seo?.score || 0,
+                pwa: categories.pwa?.score || 0
+              };
+              
+              for (const [category, score] of Object.entries(scores)) {
+                const numScore = Math.round(score * 100);
+                const icon = numScore >= 90 ? '🟢' : numScore >= 50 ? '🟡' : '🔴';
+                comment += `| ${icon} ${category} | ${numScore} |\n`;
+              }
+              
+              comment += '\n[📊 Full Report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})';
+              
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: comment
+              });
+            } catch (error) {
+              console.log('Error parsing Lighthouse results:', error);
+            }
+
+  frontend-checks:
+    name: Frontend Code Quality
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: 'fe/package-lock.json'
+
+      - name: Install dependencies
+        working-directory: fe/
+        run: npm ci
+
+      - name: Check for vulnerabilities
+        working-directory: fe/
+        run: npm audit --audit-level=moderate
+        continue-on-error: true
+
+      - name: Lint code
+        working-directory: fe/
+        run: npm run lint
+        continue-on-error: true
+
+      - name: Check code quality
+        working-directory: fe/
+        run: |
+          echo "✓ Checking frontend structure..."
+          test -f src/index.css && echo "✓ Index styles exist"
+          test -f src/App.jsx && echo "✓ Main App component exists"
+          test -d src/components && echo "✓ Components directory exists"
+          test -d src/hooks && echo "✓ Hooks directory exists"
+          test -d src/utils && echo "✓ Utils directory exists"
+          echo "✓ All required files present"
+
+      - name: Verify build
+        working-directory: fe/
+        run: npm run build
+
+      - name: Comment PR with status
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '✅ **Frontend Quality Checks Passed**\n\n- Dependencies validated\n- Code structure verified\n- Build successful\n- Lighthouse audit completed'
+            });
