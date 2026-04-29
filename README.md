@@ -1,504 +1,356 @@
-# Car Insurance Application - Complete Setup Guide
+# Car Insurance App - Frontend
 
-A full-stack car insurance management system with React frontend and Node.js backend.
+React + Vite frontend application for Car Insurance management system with Tailwind CSS and Stripe integration.
 
-## Project Overview
+## Table of Contents
 
-This is a monorepo containing two main applications:
-- **Frontend (fe)**: React + Vite + Tailwind CSS
-- **Backend (be)**: Node.js + Express + MongoDB
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Environment Setup](#environment-setup)
+- [Running the Application](#running-the-application)
+- [Building for Production](#building-for-production)
+- [Project Structure](#project-structure)
+- [Development](#development)
+- [Technology Stack](#technology-stack)
 
-## Quick Start
-
-### Prerequisites
-
-- **Node.js** v18.0.0 or higher
-- **npm** v9.0.0 or higher
-- **MongoDB** v5.0+ (local) OR Docker
-- **Git**
+## Prerequisites
 
 ### System Requirements
+- **Node.js**: v18.0.0 or higher
+- **npm**: v9.0.0 or higher
 
-| Component | Requirement |
-|-----------|-------------|
-| Node.js | v18.0.0+ |
-| npm | v9.0.0+ |
-| MongoDB | v5.0+ |
-| RAM | 2GB minimum |
-| Disk Space | 1GB minimum |
+### Backend Services
+- **Backend API**: Running on `http://localhost:5000` (during development)
+- **Stripe Account**: For payment processing
 
-## Directory Structure
+## Installation
 
-```
-car-insurance/
-├── be/                          # Backend - Node.js + Express + MongoDB
-│   ├── src/
-│   │   ├── index.js
-│   │   ├── controllers/         # Business logic
-│   │   ├── models/              # Database models
-│   │   ├── routes/              # API endpoints
-│   │   └── utils/               # Helper functions
-│   ├── .env.example             # Environment template
-│   ├── docker-compose.yml       # Docker configuration
-│   ├── Dockerfile
-│   ├── package.json
-│   └── README.md                # Backend documentation
-│
-├── fe/                          # Frontend - React + Vite + Tailwind
-│   ├── src/
-│   │   ├── components/          # React components
-│   │   ├── pages/               # Page layouts
-│   │   ├── assets/              # Static files
-│   │   ├── App.jsx
-│   │   └── main.jsx
-│   ├── .env.example             # Environment template
-│   ├── tailwind.config.js
-│   ├── vite.config.js
-│   ├── package.json
-│   └── README.md                # Frontend documentation
-│
-└── README.md                    # This file
-```
+### 1. Clone the Repository
 
-## Setup Instructions
-
-### Option 1: Complete Setup with Docker (Recommended)
-
-Docker automatically manages MongoDB, backend, and all dependencies.
-
-#### Prerequisites
-- Docker and Docker Compose installed
-
-#### Steps
-
-1. **Navigate to the backend directory**
 ```bash
-cd be
-```
-
-2. **Create `.env` file**
-```bash
-cp .env.example .env
-```
-
-3. **Update `.env` with your credentials**
-```bash
-# Edit be/.env
-# Add your Gmail app password, Stripe keys, and other credentials
-```
-
-4. **Start all services**
-```bash
-docker-compose up --build
-```
-
-5. **In a new terminal, setup frontend**
-```bash
-cd fe
-cp .env.example .env.local
-# Edit .env.local with your Stripe publishable key and backend URL
-npm install
-npm run dev
-```
-
-6. **Access the application**
-- Frontend: http://localhost:5173
-- Backend API: https://letmbe.ashydune-d638a33c.westus2.azurecontainerapps.io
-- MongoDB: localhost:27017
-
-#### Docker Commands
-```bash
-# Start containers
-docker-compose up
-
-# Stop containers
-docker-compose down
-
-# View logs
-docker-compose logs -f backend
-
-# Remove everything
-docker-compose down -v
-```
-
-### Option 2: Local Development Setup
-
-**Prerequisites:**
-- MongoDB running locally
-- Node.js v18+
-
-#### Backend Setup
-
-1. **Navigate to backend**
-```bash
-cd be
-```
-
-2. **Install dependencies**
-```bash
-npm install
-```
-
-3. **Create environment file**
-```bash
-cp .env.example .env
-```
-
-4. **Configure environment**
-Edit `be/.env` with:
-- `MONGODB_URI=mongodb://localhost:27017/car-insurance`
-- `EMAIL_USER=your-email@gmail.com`
-- `EMAIL_PASSWORD=your-app-password`
-- `STRIPE_SECRET_KEY=sk_test_...`
-- `JWT_SECRET=your-secret-key`
-
-5. **Start MongoDB**
-```bash
-# Windows
-mongod
-
-# macOS/Linux
-brew services start mongodb-community
-```
-
-6. **Start backend server**
-```bash
-npm run dev
-```
-
-Backend runs on: https://letmbe.ashydune-d638a33c.westus2.azurecontainerapps.io
-
-#### Frontend Setup
-
-1. **In a new terminal, navigate to frontend**
-```bash
+git clone <repository-url>
 cd fe
 ```
 
-2. **Install dependencies**
+### 2. Install Dependencies
+
 ```bash
 npm install
 ```
 
-3. **Create environment file**
+### 3. Environment Configuration
+
+Copy the `.env.example` file to create your `.env.local` file:
+
 ```bash
 cp .env.example .env.local
 ```
 
-4. **Configure environment**
-Edit `fe/.env.local` with:
-- `VITE_API_URL=https://letmbe.ashydune-d638a33c.westus2.azurecontainerapps.io`
-- `VITE_STRIPE_PUBLIC_KEY=pk_test_...`
+Then edit `.env.local` with your configuration values (see [Environment Setup](#environment-setup) section).
 
-5. **Start development server**
-```bash
-npm run dev
-```
+## Environment Setup
 
-Frontend runs on: http://localhost:5173
+### Create `.env.local` File
 
-## Environment Configuration
-
-### Backend (.env)
-
-Critical variables:
+Create a `.env.local` file in the `fe/` directory with the following variables:
 
 ```bash
-# Database
-MONGODB_URI=mongodb://localhost:27017/car-insurance
+# Backend API Configuration
+VITE_API_URL=http://localhost:5000
 
-# Email (Gmail)
-EMAIL_SERVICE=gmail
-EMAIL_USER=your-email@gmail.com
-EMAIL_PASSWORD=app-password  # Use app password, not regular password
+# Stripe Public Key (for client-side)
+VITE_STRIPE_PUBLIC_KEY=pk_test_your_stripe_public_key
 
-# Authentication
-JWT_SECRET=generate-strong-random-string
-
-# Stripe
-STRIPE_SECRET_KEY=sk_test_your_key
-
-# Server
-PORT=5000
-NODE_ENV=development
-```
-
-### Frontend (.env.local)
-
-Critical variables:
-
-```bash
-# Backend API
-VITE_API_URL=https://letmbe.ashydune-d638a33c.westus2.azurecontainerapps.io
-
-# Stripe Public Key
-VITE_STRIPE_PUBLIC_KEY=pk_test_your_key
-
-# Environment
+# Application Environment
 VITE_APP_ENV=development
 ```
 
-## Configuration Guides
+### Important Configuration Notes
 
-### Gmail App Password Setup
+**Stripe Setup:**
+1. Get your Publishable Key from [Stripe Dashboard](https://dashboard.stripe.com/apikeys)
+2. Use the test keys during development (starts with `pk_test_`)
+3. Add `VITE_STRIPE_PUBLIC_KEY` to your `.env.local`
 
-1. Enable 2-factor authentication in Gmail
-2. Go to https://myaccount.google.com/apppasswords
-3. Select "Mail" and "Windows Computer"  
-4. Generate App Password
-5. Use this password in `EMAIL_PASSWORD` (not your regular Gmail password)
+**Backend API URL:**
+- Development: `http://localhost:5000`
+- Production: Your deployed backend URL
 
-### Stripe Setup
+**Environment Variables Naming:**
+- All variables must be prefixed with `VITE_` to be accessible in the frontend
+- Reference them as `import.meta.env.VITE_VARIABLE_NAME` in code
 
-1. Create account at https://stripe.com
-2. Go to Dashboard → API Keys
-3. Copy **Publishable Key** (pk_test_...) → `VITE_STRIPE_PUBLIC_KEY`
-4. Copy **Secret Key** (sk_test_...) → `STRIPE_SECRET_KEY`
-5. Use test keys during development
-6. Never commit keys to version control
+## Running the Application
 
-### MongoDB Setup
+### Development Mode
 
-**Local Installation (Windows):**
+1. Start the development server:
 ```bash
-# Download from https://www.mongodb.com/try/download/community
-# Or use Chocolatey
-choco install mongodb-community
-mongod
+npm run dev
 ```
 
-**Local Installation (macOS):**
+2. Open your browser and navigate to:
+```
+http://localhost:5173
+```
+
+The app will automatically reload when you make changes to the code (Hot Module Replacement).
+
+### Build for Production
+
+1. Create an optimized production build:
 ```bash
-# Using Homebrew
-brew tap mongodb/brew
-brew install mongodb-community
-brew services start mongodb-community
-```
-
-**Cloud Database (MongoDB Atlas):**
-1. Go to https://www.mongodb.com/cloud/atlas
-2. Create account and cluster
-3. Get connection string
-4. Update `MONGODB_URI` in `.env`
-```
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/car-insurance
-```
-
-## API Endpoints Reference
-
-### Authentication
-- `POST /api/auth/send-otp` - Send OTP to email
-- `POST /api/auth/verify-otp` - Verify OTP and login
-
-### Notifications
-- `GET /api/notifications` - Get user notifications
-- `PUT /api/notifications/:id` - Mark as read
-
-### Payments
-- `POST /api/payments/create-intent` - Create Stripe intent
-- `POST /api/payments/confirm` - Confirm payment
-
-See [Backend README](be/README.md) for complete API documentation.
-
-## Common Issues & Troubleshooting
-
-### MongoDB Connection Failed
-```
-Error: connect ECONNREFUSED 127.0.0.1:27017
-```
-**Solution:**
-- Ensure MongoDB is running: `mongod`
-- Check `MONGODB_URI` in `.env`
-- If using Docker: `docker-compose up mongo`
-
-### Port Already in Use
-```
-Error: listen EADDRINUSE :::5000
-```
-**Solution:**
-- Change PORT in `.env` to different value
-- Or kill process: `lsof -ti:5000 | xargs kill`
-
-### Backend API Connection Failed
-```
-Error: Network Error or CORS issue
-```
-**Solution:**
-- Check backend is running on `https://letmbe.ashydune-d638a33c.westus2.azurecontainerapps.io`
-- Verify `VITE_API_URL` in `.env.local`
-- Check browser console for CORS errors
-
-### OTP Not Sending
-```
-Error: Email service error
-```
-**Solution:**
-- Verify Gmail app password (not regular password)
-- Enable 2-factor authentication
-- Check `EMAIL_USER` and `EMAIL_PASSWORD` in `.env`
-
-### Stripe Payment Error
-```
-Error: Stripe key error or invalid configuration
-```
-**Solution:**
-- Use Publishable Key in frontend (pk_test_)
-- Use Secret Key in backend (sk_test_)
-- Verify keys in `.env` and `.env.local`
-- Check console for specific Stripe error
-
-### Vite Port Already in Use
-```
-Error: Port 5173 is already in use
-```
-**Solution:**
-```bash
-npm run dev -- --port 3000
-```
-
-## Development Workflow
-
-### Making Changes
-
-1. **Backend Changes**
-   - Edit files in `be/src/`
-   - Auto-reloads via nodemon
-   - Test with API client (Postman, curl, etc.)
-
-2. **Frontend Changes**
-   - Edit files in `fe/src/components/`
-   - Auto-reloads via Vite HMR
-   - Changes visible immediately in browser
-
-3. **Database Schema Changes**
-   - Modify models in `be/src/models/`
-   - Backup data if needed
-   - Restart backend
-
-### Testing API
-
-**Using curl:**
-```bash
-curl -X POST https://letmbe.ashydune-d638a33c.westus2.azurecontainerapps.io/api/auth/send-otp \
-  -H "Content-Type: application/json" \
-  -d '{"email":"test@example.com"}'
-```
-
-**Using Postman:**
-1. Import API endpoints
-2. Create requests for each endpoint
-3. Test with different payloads
-
-## Building for Production
-
-### Backend Deployment
-
-1. **Build Docker image**
-```bash
-cd be
-docker build -t car-insurance-backend:1.0 .
-```
-
-2. **Push to registry**
-```bash
-docker tag car-insurance-backend:1.0 your-registry/car-insurance-backend:1.0
-docker push your-registry/car-insurance-backend:1.0
-```
-
-3. **Deploy to production**
-   - Update environment variables for production
-   - Use production MongoDB database
-   - Use production Stripe keys
-   - Set `NODE_ENV=production`
-
-### Frontend Deployment
-
-1. **Build for production**
-```bash
-cd fe
 npm run build
 ```
 
-2. **Preview build**
+2. Preview the production build locally:
 ```bash
 npm run preview
 ```
 
-3. **Deploy dist/ folder**
-   - Vercel, Netlify, AWS S3, GitHub Pages, etc.
-   - Update `VITE_API_URL` to production backend
+### Code Quality
 
-### Deployment Checklist
+**Run ESLint** to check for code quality issues:
+```bash
+npm run lint
+```
 
-- [ ] Update `.env` with production values
-- [ ] Update `VITE_API_URL` to production backend
-- [ ] Use production MongoDB database
-- [ ] Use production Stripe keys
-- [ ] Set `NODE_ENV=production`
-- [ ] Enable HTTPS
-- [ ] Configure proper error logging
-- [ ] Test all features in production
-- [ ] Monitor logs and errors
-- [ ] Set up automated backups
-- [ ] Configure CI/CD pipeline
+## Project Structure
+
+```
+fe/
+├── src/
+│   ├── components/              # Reusable React components
+│   │   ├── Home.jsx
+│   │   ├── Login.jsx            # Authentication component
+│   │   ├── Menu.jsx             # Navigation menu
+│   │   ├── MyPolicies.jsx       # User insurance policies
+│   │   ├── Payment.jsx          # Payment processing
+│   │   ├── PolicyDetails.jsx    # Policy information
+│   │   ├── Quotes.jsx           # Insurance quotes
+│   │   └── Notifications.jsx    # User notifications
+│   ├── pages/                   # Page-level components
+│   ├── assets/                  # Static assets (images, fonts, etc.)
+│   ├── App.jsx                  # Main App component
+│   ├── App.css                  # Global app styles
+│   ├── main.jsx                 # Application entry point
+│   └── index.css                # Global styles
+├── public/                      # Publicly accessible static files
+├── .env.example                 # Example environment variables
+├── package.json
+├── vite.config.js               # Vite configuration
+├── tailwind.config.js           # Tailwind CSS configuration
+├── postcss.config.js            # PostCSS configuration
+└── README.md
+```
+
+## Development
+
+### Available Scripts
+
+| Script | Purpose |
+|--------|---------|
+| `npm run dev` | Start development server with hot reload |
+| `npm run build` | Create production build |
+| `npm run preview` | Preview production build locally |
+| `npm run lint` | Run ESLint to check code quality |
+
+### Development Server Details
+
+- **Default URL**: `http://localhost:5173`
+- **Hot Module Replacement (HMR)**: Enabled by default
+- **Source Maps**: Generated for debugging
+
+### Component Structure
+
+Each component typically follows this pattern:
+
+```jsx
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+
+export default function ComponentName() {
+  const [state, setState] = useState(null);
+  
+  const apiUrl = import.meta.env.VITE_API_URL;
+
+  useEffect(() => {
+    // Component logic
+  }, []);
+
+  return (
+    <div>
+      {/* Component JSX */}
+    </div>
+  );
+}
+```
+
+### API Integration
+
+All API calls use axios with the backend base URL:
+
+```javascript
+import axios from 'axios';
+
+const apiUrl = import.meta.env.VITE_API_URL;
+
+// Example: Send OTP
+const sendOtp = async (email) => {
+  try {
+    const response = await axios.post(`${apiUrl}/api/auth/send-otp`, {
+      email
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error:', error);
+  }
+};
+```
+
+### Styling with Tailwind CSS
+
+The project uses Tailwind CSS for styling:
+
+```jsx
+<div className="bg-blue-500 text-white p-4 rounded-lg shadow-md">
+  Hello World
+</div>
+```
+
+## Building for Production
+
+### 1. Create Production Build
+
+```bash
+npm run build
+```
+
+This creates an optimized build in the `dist/` directory.
+
+### 2. Build Output
+
+The build includes:
+- Minified JavaScript and CSS
+- Optimized images
+- Source maps (optional)
+- Static assets
+
+### 3. Deployment
+
+Deploy the contents of the `dist/` directory to your hosting service:
+
+**Popular Hosting Options:**
+- Vercel (recommended for Vite)
+- Netlify
+- GitHub Pages
+- AWS S3 + CloudFront
+- Azure Static Web Apps
+
+**Example: Deploy to Vercel**
+```bash
+npm i -g vercel
+vercel
+```
 
 ## Technology Stack
 
-### Frontend
-- React 18.2.0
-- Vite 5.0.0
-- Tailwind CSS 3.4.0
-- Stripe React Integration
-- Axios
-- HTML2Canvas & jsPDF
+### Core
+- **React** 18.2.0 - UI library
+- **Vite** 5.0.0 - Build tool and dev server
+- **JavaScript (ES Modules)**
 
-### Backend
-- Node.js 18+
-- Express.js
-- MongoDB with Mongoose
-- Stripe SDK
-- SendGrid Email Service
-- JWT Authentication
+### Styling
+- **Tailwind CSS** 3.4.0 - Utility-first CSS framework
+- **PostCSS** 8.4.0 - CSS transformation
+- **Autoprefixer** 10.4.0 - Browser compatibility
 
-### DevOps
-- Docker
-- Docker Compose
-- MongoDB
-- Git/GitHub
+### HTTP & State
+- **Axios** 1.6.0 - HTTP client for API requests
+
+### Payments
+- **Stripe React** 2.4.0 - Stripe integration
+- **Stripe.js** 1.46.0 - Stripe client library
+
+### PDF & Export
+- **html2canvas** 1.4.1 - Screenshot library
+- **jsPDF** 4.1.0 - PDF generation
+
+### Icons
+- **react-icons** 4.12.0 - Icon library
+
+### Development
+- **ESLint** 8.54.0 - Code quality
+- **React Plugin** 7.33.0 - React linting rules
+- **Vite React Plugin** 4.2.0 - React support in Vite
+
+## Dependencies
+
+```json
+{
+  "React": "UI library",
+  "Vite": "Build tool and dev server",
+  "Tailwind CSS": "Styling framework",
+  "Axios": "HTTP client",
+  "Stripe": "Payment processing",
+  "html2canvas & jsPDF": "Document export",
+  "react-icons": "Icon library"
+}
+```
+
+## Development Notes
+
+### Common Issues and Solutions
+
+**Port Already in Use**
+- Vite default port is 5173. If it's in use, specify a different port:
+```bash
+npm run dev -- --port 3000
+```
+
+**Backend API Connection Failed**
+- Ensure backend is running on `http://localhost:5000`
+- Check `VITE_API_URL` in `.env.local`
+- Check browser console for CORS errors
+
+**Stripe Key Issues**
+- Ensure you're using Publishable Key (not Secret Key)
+- Use test keys (pk_test_) during development
+- Verify key is correctly set in `.env.local`
+
+**Module Not Found Errors**
+- Run `npm install` to ensure all dependencies are installed
+- Clear node_modules and reinstall: `rm -rf node_modules && npm install`
+
+### Browser DevTools
+
+**Recommended Extensions:**
+- React Developer Tools
+- Vite DevTools
+- Redux DevTools (if using Redux)
+
+## Deployment Checklist
+
+Before deploying to production:
+
+- [ ] Update `VITE_API_URL` to production backend URL
+- [ ] Update `VITE_STRIPE_PUBLIC_KEY` to production Stripe key
+- [ ] Set `VITE_APP_ENV=production`
+- [ ] Run `npm run build` and verify output
+- [ ] Test production build with `npm run preview`
+- [ ] Run linter: `npm run lint`
+- [ ] Clear browser cache and test
+- [ ] Test all payment flows with Stripe live mode
+- [ ] Test on multiple browsers and devices
+
+## Support
+
+For issues and questions, please check the main project README or contact the development team.
 
 ## Additional Resources
 
-### Documentation
-- [Backend README](be/README.md)
-- [Frontend README](fe/README.md)
 - [Vite Documentation](https://vitejs.dev)
 - [React Documentation](https://react.dev)
-- [Express.js Guide](https://expressjs.com)
-- [MongoDB Documentation](https://docs.mongodb.com)
-
-### External Services
-- [Stripe Documentation](https://stripe.com/docs)
-- [Gmail App Passwords](https://myaccount.google.com/apppasswords)
-- [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
-- [SendGrid Documentation](https://docs.sendgrid.com)
-
-## Support & Contribution
-
-### Getting Help
-1. Check the [Backend README](be/README.md) for backend issues
-2. Check the [Frontend README](fe/README.md) for frontend issues
-3. Review error messages in console
-4. Check `.env` and `.env.local` configurations
-
-### Contributing
-1. Create a feature branch
-2. Make your changes
-3. Test thoroughly
-4. Submit a pull request
-
-## License
-MIT
-
-For detailed setup instructions for specific components, see:
-- [Backend Setup](be/README.md)
-- [Frontend Setup](fe/README.md)
+- [Tailwind CSS Documentation](https://tailwindcss.com)
+- [Stripe React Integration](https://stripe.com/docs/stripe-js/react)
+- [Axios Documentation](https://axios-http.com)
